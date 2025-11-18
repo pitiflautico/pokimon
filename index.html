@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POKIMON: Cyber Myths - El Juego Definitivo</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="title-screen" class="screen active">
+            <div class="title-content">
+                <h1 class="glitch" data-text="POKIMON">POKIMON</h1>
+                <h2 class="subtitle">CYBER MYTHS</h2>
+                <div class="title-menu">
+                    <button class="menu-btn" onclick="game.newGame()">NUEVA PARTIDA</button>
+                    <button class="menu-btn" onclick="game.loadGame()">CARGAR PARTIDA</button>
+                    <button class="menu-btn" onclick="game.showControls()">CONTROLES</button>
+                </div>
+                <div class="version">v1.0.0 - Edición Completa</div>
+            </div>
+        </div>
+
+        <div id="game-screen" class="screen">
+            <div id="hud">
+                <div class="hud-section">
+                    <div class="player-info">
+                        <div class="player-name" id="playerName">Entrenador</div>
+                        <div class="player-stats">
+                            <span id="playerMoney">💎 0</span>
+                            <span id="playerTime">⏰ 00:00</span>
+                            <span id="weatherInfo">☀️ Soleado</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="hud-section">
+                    <div class="team-preview" id="teamPreview"></div>
+                </div>
+                <div class="hud-section">
+                    <button class="hud-btn" onclick="game.openMenu()">MENÚ [M]</button>
+                    <button class="hud-btn" onclick="game.openPokedex()">POKIDEX [P]</button>
+                    <button class="hud-btn" onclick="game.saveGame()">GUARDAR [S]</button>
+                </div>
+            </div>
+
+            <canvas id="gameCanvas"></canvas>
+
+            <div class="controls-hint">
+                <div>⬆️⬇️⬅️➡️ Mover | ESPACIO: Interactuar | ESC: Menú</div>
+            </div>
+        </div>
+
+        <div id="battle-screen" class="screen">
+            <div class="battle-container">
+                <div class="battle-field">
+                    <div class="weather-effect" id="battleWeather"></div>
+
+                    <div class="enemy-side">
+                        <div class="pokimon-sprite" id="enemySprite"></div>
+                        <div class="pokimon-info enemy">
+                            <div class="name" id="enemyName"></div>
+                            <div class="level" id="enemyLevel"></div>
+                            <div class="hp-bar">
+                                <div class="hp-fill" id="enemyHPBar"></div>
+                            </div>
+                            <div class="hp-text" id="enemyHP"></div>
+                            <div class="status-effects" id="enemyStatus"></div>
+                        </div>
+                    </div>
+
+                    <div class="player-side">
+                        <div class="pokimon-info player">
+                            <div class="name" id="playerPokimonName"></div>
+                            <div class="level" id="playerPokimonLevel"></div>
+                            <div class="hp-bar">
+                                <div class="hp-fill" id="playerHPBar"></div>
+                            </div>
+                            <div class="hp-text" id="playerPokimonHP"></div>
+                            <div class="energy-bar">
+                                <div class="energy-fill" id="playerEnergyBar"></div>
+                            </div>
+                            <div class="status-effects" id="playerStatus"></div>
+                        </div>
+                        <div class="pokimon-sprite player" id="playerSprite"></div>
+                    </div>
+                </div>
+
+                <div class="battle-ui">
+                    <div class="battle-log" id="battleLog"></div>
+
+                    <div class="battle-menu" id="battleMenu">
+                        <button class="battle-btn attack" onclick="battle.showMoves()">⚔️ ATACAR</button>
+                        <button class="battle-btn items" onclick="battle.showItems()">🎒 ITEMS</button>
+                        <button class="battle-btn pokimon" onclick="battle.showTeam()">👥 EQUIPO</button>
+                        <button class="battle-btn run" onclick="battle.tryRun()">🏃 HUIR</button>
+                    </div>
+
+                    <div class="moves-menu hidden" id="movesMenu"></div>
+                    <div class="items-menu hidden" id="itemsMenu"></div>
+                    <div class="team-menu hidden" id="teamMenu"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="menu-screen" class="screen">
+            <div class="menu-container">
+                <h2>MENÚ PRINCIPAL</h2>
+                <div class="menu-grid">
+                    <button class="menu-option" onclick="game.showTeamManagement()">
+                        <span class="icon">👥</span>
+                        <span>EQUIPO</span>
+                    </button>
+                    <button class="menu-option" onclick="game.showInventory()">
+                        <span class="icon">🎒</span>
+                        <span>INVENTARIO</span>
+                    </button>
+                    <button class="menu-option" onclick="game.showPokedex()">
+                        <span class="icon">📱</span>
+                        <span>POKIDEX</span>
+                    </button>
+                    <button class="menu-option" onclick="game.showCrafting()">
+                        <span class="icon">🔧</span>
+                        <span>CRAFTEO</span>
+                    </button>
+                    <button class="menu-option" onclick="game.showFusion()">
+                        <span class="icon">⚡</span>
+                        <span>FUSIÓN</span>
+                    </button>
+                    <button class="menu-option" onclick="game.showQuests()">
+                        <span class="icon">📜</span>
+                        <span>MISIONES</span>
+                    </button>
+                    <button class="menu-option" onclick="game.showSettings()">
+                        <span class="icon">⚙️</span>
+                        <span>OPCIONES</span>
+                    </button>
+                    <button class="menu-option" onclick="game.closeMenu()">
+                        <span class="icon">❌</span>
+                        <span>CERRAR</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="modal-close" onclick="game.closeModal()">&times;</span>
+                <div id="modalBody"></div>
+            </div>
+        </div>
+
+        <div id="notification" class="notification hidden"></div>
+    </div>
+
+    <script src="pokimon.js"></script>
+    <script src="items.js"></script>
+    <script src="world.js"></script>
+    <script src="combat.js"></script>
+    <script src="ui.js"></script>
+    <script src="engine.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
