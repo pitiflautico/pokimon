@@ -3,22 +3,22 @@
 const TILE_SIZE = 32;
 
 const TILE_TYPES = {
-    GRASS: { emoji: '🟩', walkable: true, encounter: true, encounterRate: 10 },
-    TALL_GRASS: { emoji: '🌿', walkable: true, encounter: true, encounterRate: 25 },
-    WATER: { emoji: '🌊', walkable: false, encounter: true, encounterRate: 15 },
+    GRASS: { emoji: '🟩', walkable: true, encounter: true, encounterRate: 4 },
+    TALL_GRASS: { emoji: '🌿', walkable: true, encounter: true, encounterRate: 8 },
+    WATER: { emoji: '🌊', walkable: false, encounter: true, encounterRate: 6 },
     TREE: { emoji: '🌲', walkable: false, encounter: false },
     ROCK: { emoji: '🪨', walkable: false, encounter: false },
-    FLOWER: { emoji: '🌸', walkable: true, encounter: true, encounterRate: 20 },
+    FLOWER: { emoji: '🌸', walkable: true, encounter: true, encounterRate: 6 },
     PATH: { emoji: '⬜', walkable: true, encounter: false },
     BUILDING: { emoji: '🏢', walkable: false, interact: 'building' },
     POKECENTER: { emoji: '🏥', walkable: false, interact: 'pokecenter' },
     SHOP: { emoji: '🏪', walkable: false, interact: 'shop' },
-    CAVE: { emoji: '⛰️', walkable: true, encounter: true, encounterRate: 30 },
+    CAVE: { emoji: '⛰️', walkable: true, encounter: true, encounterRate: 10 },
     LAVA: { emoji: '🔥', walkable: false, damage: true },
     ICE: { emoji: '🧊', walkable: true, slippery: true },
     PORTAL: { emoji: '🌀', walkable: true, interact: 'portal' },
-    CYBER_ZONE: { emoji: '💠', walkable: true, encounter: true, encounterRate: 35 },
-    VOID_ZONE: { emoji: '🌌', walkable: true, encounter: true, encounterRate: 40 }
+    CYBER_ZONE: { emoji: '💠', walkable: true, encounter: true, encounterRate: 12 },
+    VOID_ZONE: { emoji: '🌌', walkable: true, encounter: true, encounterRate: 15 }
 };
 
 // Zonas del juego
@@ -197,15 +197,21 @@ class World {
         const tileType = TILE_TYPES[tile];
         if (!tileType.encounter) return false;
 
+        // Zona starter tiene encuentros reducidos
+        let zoneModifier = 1.0;
+        if (this.currentZone === 'STARTER_TOWN') zoneModifier = 0.3;
+        if (this.currentZone === 'ROUTE_1') zoneModifier = 0.7;
+
         // Modificador por clima
-        let rateModifier = 1.0;
-        if (this.weather === 'rainy') rateModifier = 1.2;
-        if (this.weather === 'stormy') rateModifier = 1.5;
+        let weatherModifier = 1.0;
+        if (this.weather === 'rainy') weatherModifier = 1.15;
+        if (this.weather === 'stormy') weatherModifier = 1.3;
 
         // Modificador por hora
-        if (this.timeOfDay === 'night') rateModifier *= 1.3;
+        let timeModifier = 1.0;
+        if (this.timeOfDay === 'night') timeModifier = 1.2;
 
-        const chance = tileType.encounterRate * rateModifier;
+        const chance = tileType.encounterRate * zoneModifier * weatherModifier * timeModifier;
         return Math.random() * 100 < chance;
     }
 

@@ -208,16 +208,55 @@ class Battle {
             return;
         }
 
+        // Procesar efectos de estado del jugador
+        this.processStatusEffects(this.playerPokimon);
+
+        // Verificar si puede atacar
+        if (this.playerPokimon.statusEffects.includes('sleep')) {
+            if (Math.random() < 0.25) {
+                this.playerPokimon.statusEffects = this.playerPokimon.statusEffects.filter(e => e !== 'sleep');
+                this.log(`${this.playerPokimon.name} se despertó!`);
+            } else {
+                this.log(`${this.playerPokimon.name} está dormido...`);
+                this.enemyTurn();
+                this.turn++;
+                this.updateUI();
+                return;
+            }
+        }
+
+        if (this.playerPokimon.statusEffects.includes('paralyze') && Math.random() < 0.25) {
+            this.log(`${this.playerPokimon.name} está paralizado y no puede moverse!`);
+            this.enemyTurn();
+            this.turn++;
+            this.updateUI();
+            return;
+        }
+
+        if (this.playerPokimon.statusEffects.includes('confuse') && Math.random() < 0.33) {
+            this.log(`${this.playerPokimon.name} está confundido y se golpeó a sí mismo!`);
+            const damage = Math.floor(this.playerPokimon.stats.attack * 0.3);
+            this.playerPokimon.takeDamage(damage);
+            this.enemyTurn();
+            this.turn++;
+            this.updateUI();
+            return;
+        }
+
         this.playerPokimon.currentEnergy -= move.energy;
 
         // Determinar orden de ataque (por velocidad)
         const playerSpeed = this.calculateStat(this.playerPokimon, 'speed', this.playerBuffs.speed);
         const enemySpeed = this.calculateStat(this.enemyPokimon, 'speed', this.enemyBuffs.speed);
 
-        if (playerSpeed >= enemySpeed) {
+        // Priority moves van primero
+        const hasPriority = move.effect === 'priority';
+
+        if (hasPriority || playerSpeed >= enemySpeed) {
             this.executeMove(this.playerPokimon, this.enemyPokimon, move, this.playerBuffs, this.enemyBuffs);
             if (!this.checkBattleEnd()) {
                 this.enemyTurn();
+                this.checkBattleEnd();
             }
         } else {
             this.enemyTurn();
@@ -226,6 +265,12 @@ class Battle {
                 this.checkBattleEnd();
             }
         }
+
+        // Regenerar energía del jugador
+        this.playerPokimon.currentEnergy = Math.min(
+            this.playerPokimon.stats.energy,
+            this.playerPokimon.currentEnergy + 5
+        );
 
         this.turn++;
         this.updateUI();
@@ -324,21 +369,37 @@ class Battle {
                 this.log(`${attacker.name} recuperó ${healAmount} HP!`);
             },
             buff: () => {
-                attackerBuffs.attack += 1;
-                attackerBuffs.defense += 1;
-                this.log(`¡Las estadísticas de ${attacker.name} aumentaron!`);
+                if (attackerBuffs.attack < 6 && attackerBuffs.defense < 6) {
+                    attackerBuffs.attack = Math.min(6, attackerBuffs.attack + 1);
+                    attackerBuffs.defense = Math.min(6, attackerBuffs.defense + 1);
+                    this.log(`¡Las estadísticas de ${attacker.name} aumentaron!`);
+                } else {
+                    this.log(`¡Las estadísticas de ${attacker.name} ya no pueden aumentar más!`);
+                }
             },
             defense: () => {
-                attackerBuffs.defense += 2;
-                this.log(`¡La defensa de ${attacker.name} aumentó!`);
+                if (attackerBuffs.defense < 6) {
+                    attackerBuffs.defense = Math.min(6, attackerBuffs.defense + 2);
+                    this.log(`¡La defensa de ${attacker.name} aumentó!`);
+                } else {
+                    this.log(`¡La defensa de ${attacker.name} ya no puede aumentar más!`);
+                }
             },
             attack_buff: () => {
-                attackerBuffs.attack += 2;
-                this.log(`¡El ataque de ${attacker.name} aumentó!`);
+                if (attackerBuffs.attack < 6) {
+                    attackerBuffs.attack = Math.min(6, attackerBuffs.attack + 2);
+                    this.log(`¡El ataque de ${attacker.name} aumentó!`);
+                } else {
+                    this.log(`¡El ataque de ${attacker.name} ya no puede aumentar más!`);
+                }
             },
             speed_buff: () => {
-                attackerBuffs.speed += 2;
-                this.log(`¡La velocidad de ${attacker.name} aumentó!`);
+                if (attackerBuffs.speed < 6) {
+                    attackerBuffs.speed = Math.min(6, attackerBuffs.speed + 2);
+                    this.log(`¡La velocidad de ${attacker.name} aumentó!`);
+                } else {
+                    this.log(`¡La velocidad de ${attacker.name} ya no puede aumentar más!`);
+                }
             },
             paralyze: () => {
                 if (Math.random() < 0.3 && !defender.statusEffects.includes('paralyze')) {
@@ -378,26 +439,111 @@ class Battle {
     }
 
     enemyTurn() {
-        // IA simple: elegir movimiento aleatorio
+        // Procesar efectos de estado
+        this.processStatusEffects(this.enemyPokimon);
+
+        // Verificar si puede atacar (sleep, paralyze, etc.)
+        if (this.enemyPokimon.statusEffects.includes('sleep')) {
+            if (Math.random() < 0.25) {
+                this.enemyPokimon.statusEffects = this.enemyPokimon.statusEffects.filter(e => e !== 'sleep');
+                this.log(`${this.enemyPokimon.name} se despertó!`);
+            } else {
+                this.log(`${this.enemyPokimon.name} está dormido...`);
+                return;
+            }
+        }
+
+        if (this.enemyPokimon.statusEffects.includes('paralyze') && Math.random() < 0.25) {
+            this.log(`${this.enemyPokimon.name} está paralizado y no puede moverse!`);
+            return;
+        }
+
+        // IA mejorada: elegir movimiento estratégicamente
         const enemyMoves = this.enemyPokimon.moves.filter(moveName => {
             const move = MOVES_DATA[moveName];
             return this.enemyPokimon.currentEnergy >= move.energy;
         });
 
         if (enemyMoves.length === 0) {
-            this.log(`${this.enemyPokimon.name} no puede atacar!`);
+            this.log(`${this.enemyPokimon.name} no puede atacar y recupera energía!`);
             this.enemyPokimon.currentEnergy = Math.min(
                 this.enemyPokimon.stats.energy,
-                this.enemyPokimon.currentEnergy + 20
+                this.enemyPokimon.currentEnergy + 30
             );
             return;
         }
 
-        const moveName = enemyMoves[Math.floor(Math.random() * enemyMoves.length)];
-        const move = MOVES_DATA[moveName];
+        // Elegir mejor movimiento (con algo de randomness)
+        let moveName;
+        if (Math.random() < 0.7) {
+            // 70% usar estrategia
+            moveName = this.chooseSmartMove(enemyMoves);
+        } else {
+            // 30% random
+            moveName = enemyMoves[Math.floor(Math.random() * enemyMoves.length)];
+        }
 
+        const move = MOVES_DATA[moveName];
         this.enemyPokimon.currentEnergy -= move.energy;
         this.executeMove(this.enemyPokimon, this.playerPokimon, move, this.enemyBuffs, this.playerBuffs);
+
+        // Regenerar energía gradual
+        this.enemyPokimon.currentEnergy = Math.min(
+            this.enemyPokimon.stats.energy,
+            this.enemyPokimon.currentEnergy + 5
+        );
+    }
+
+    chooseSmartMove(availableMoves) {
+        let bestMove = availableMoves[0];
+        let bestScore = 0;
+
+        for (const moveName of availableMoves) {
+            const move = MOVES_DATA[moveName];
+            let score = move.power || 0;
+
+            // Preferir movimientos super efectivos
+            const effectiveness = this.getEffectiveness(move.type, this.playerPokimon.type);
+            score *= effectiveness;
+
+            // Preferir movimientos STAB
+            if (move.type === this.enemyPokimon.type) {
+                score *= 1.3;
+            }
+
+            // Usar curación si HP bajo
+            if (move.effect === 'heal' && this.enemyPokimon.currentHP < this.enemyPokimon.stats.hp * 0.3) {
+                score += 200;
+            }
+
+            // Usar buffs al inicio
+            if ((move.effect === 'buff' || move.effect === 'attack_buff') && this.turn < 2) {
+                score += 100;
+            }
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestMove = moveName;
+            }
+        }
+
+        return bestMove;
+    }
+
+    processStatusEffects(pokimon) {
+        const effects = pokimon.statusEffects;
+
+        if (effects.includes('poison')) {
+            const damage = Math.floor(pokimon.stats.hp * 0.0625);
+            pokimon.takeDamage(damage);
+            this.log(`${pokimon.name} sufre ${damage} de daño por envenenamiento!`);
+        }
+
+        if (effects.includes('burn')) {
+            const damage = Math.floor(pokimon.stats.hp * 0.0625);
+            pokimon.takeDamage(damage);
+            this.log(`${pokimon.name} sufre ${damage} de daño por quemadura!`);
+        }
     }
 
     useItem(itemKey) {
@@ -426,17 +572,25 @@ class Battle {
         const ball = ITEMS_DATA[ballType];
         if (!game.player.inventory.removeItem(ballType)) {
             this.log('¡No tienes ese tipo de Pokiball!');
+            this.hideMenus();
             return;
         }
 
         this.log(`¡Usaste ${ball.name}!`);
 
-        // Calcular probabilidad de captura
-        const hpFactor = (1 - this.enemyPokimon.currentHP / this.enemyPokimon.stats.hp);
-        const rarityFactor = { común: 1, 'poco común': 0.8, raro: 0.6, épico: 0.4, legendario: 0.2 }[this.enemyPokimon.rarity] || 1;
+        // Calcular probabilidad de captura mejorada
+        const hpFactor = Math.max(0.1, (3 - 2 * (this.enemyPokimon.currentHP / this.enemyPokimon.stats.hp)) / 3);
+        const rarityFactor = { común: 1.2, 'poco común': 1.0, raro: 0.7, épico: 0.5, legendario: 0.3 }[this.enemyPokimon.rarity] || 1;
         const catchRate = POKIMON_DATA[this.enemyPokimon.species].catchRate;
 
-        const probability = ((catchRate * ball.catchRate * hpFactor * rarityFactor) / 255) * 100;
+        // Bonus por estado
+        let statusBonus = 1.0;
+        if (this.enemyPokimon.statusEffects.length > 0) {
+            statusBonus = 1.5;
+        }
+
+        // Fórmula mejorada
+        const probability = Math.min(95, ((catchRate * ball.catchRate * hpFactor * rarityFactor * statusBonus) / 255) * 100);
 
         // Animación de captura
         this.createCaptureAnimation();
@@ -444,6 +598,12 @@ class Battle {
         setTimeout(() => {
             if (Math.random() * 100 < probability || ball.catchRate === 255) {
                 this.log(`¡${this.enemyPokimon.name} fue capturado!`);
+
+                // Bonus de experiencia por captura
+                const expBonus = Math.floor(this.enemyPokimon.level * 25);
+                this.playerPokimon.gainExp(expBonus);
+                this.log(`${this.playerPokimon.name} ganó ${expBonus} EXP por la captura!`);
+
                 game.player.addPokimon(this.enemyPokimon);
 
                 // Actualizar misiones
@@ -451,7 +611,7 @@ class Battle {
 
                 setTimeout(() => this.endBattle(true), 2000);
             } else {
-                this.log(`¡Oh no! ${this.enemyPokimon.name} escapó!`);
+                this.log(`¡Oh no! ${this.enemyPokimon.name} escapó de la ${ball.name}!`);
                 this.enemyTurn();
                 this.updateUI();
             }
@@ -495,14 +655,38 @@ class Battle {
             this.log(`¡${this.enemyPokimon.name} se debilitó!`);
 
             // Ganar experiencia
-            const expGain = Math.floor((this.enemyPokimon.level * 50) * (this.isWild ? 1 : 1.5));
-            this.playerPokimon.gainExp(expGain);
+            const expGain = Math.floor((this.enemyPokimon.level * 40) * (this.isWild ? 1 : 1.5));
+            const evolution = this.playerPokimon.gainExp(expGain);
             this.log(`${this.playerPokimon.name} ganó ${expGain} EXP!`);
 
-            // Dinero
-            const moneyGain = this.enemyPokimon.level * 25;
+            // Verificar subida de nivel
+            if (this.playerPokimon.level > this.turn + 5) {
+                this.log(`¡${this.playerPokimon.name} subió al nivel ${this.playerPokimon.level}!`);
+            }
+
+            // Verificar evolución
+            if (evolution) {
+                this.log(`¿Qué? ¡${this.playerPokimon.name} está evolucionando!`);
+                setTimeout(() => {
+                    if (confirm(`¿Permitir que ${this.playerPokimon.name} evolucione a ${evolution}?`)) {
+                        game.evolveAfterBattle = { pokimon: this.playerPokimon, into: evolution };
+                    }
+                }, 1500);
+            }
+
+            // Dinero (más balanceado)
+            const rarityMultiplier = { común: 1, 'poco común': 1.5, raro: 2, épico: 3, legendario: 5 }[this.enemyPokimon.rarity] || 1;
+            const moneyGain = Math.floor(this.enemyPokimon.level * 15 * rarityMultiplier);
             game.player.money += moneyGain;
             this.log(`¡Ganaste ${moneyGain} créditos!`);
+
+            // Posible drop de item
+            if (Math.random() < 0.15) {
+                const dropTable = ['HERB', 'HERB', 'CYBER_FRAGMENT', 'POTION'];
+                const drop = dropTable[Math.floor(Math.random() * dropTable.length)];
+                game.player.inventory.addItem(drop, 1);
+                this.log(`¡Encontraste ${ITEMS_DATA[drop].name}!`);
+            }
 
             // Actualizar estadísticas
             game.player.stats.battles++;
@@ -536,9 +720,15 @@ class Battle {
 
     endBattle(won) {
         if (won) {
-            game.showNotification('¡Victoria!', 'success');
+            UI.showNotification('¡Victoria! Ganaste la batalla', 'success');
         } else {
-            game.showNotification('Batalla terminada', 'info');
+            UI.showNotification('Batalla terminada', 'info');
+            // Si perdió, teletransportar al Centro Pokimon más cercano
+            if (!game.player.hasAlivePokimon()) {
+                game.player.x = 5;
+                game.player.y = 5;
+                UI.showNotification('Te desmayaste... Fuiste llevado al Centro Pokimon', 'warning', 4000);
+            }
         }
 
         game.switchScreen('game');

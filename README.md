@@ -1,10 +1,27 @@
 # 🎮 POKIMON: Cyber Myths
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Version](https://img.shields.io/badge/version-1.1.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Web-orange)
+![Status](https://img.shields.io/badge/status-Balanced-success)
 
 **Un juego RPG totalmente funcional inspirado en Pokémon, pero con una temática cyberpunk única donde criaturas mitológicas se fusionan con tecnología digital.**
+
+## 🆕 Actualización v1.1.0 - Balance y Mejoras
+
+**Mejoras de Balance:**
+- ✅ IA enemiga mejorada con decisiones estratégicas
+- ✅ Sistema de efectos de estado funcional (veneno, parálisis, confusión, etc.)
+- ✅ Regeneración gradual de energía en combate
+- ✅ Límite de buffs para evitar stacking infinito
+- ✅ Sistema de captura rebalanceado con bonus por estado
+- ✅ Tasas de encuentro ajustadas (más cómodas para el jugador)
+- ✅ Cooldown entre encuentros para evitar spam
+- ✅ Economía rebalanceada con drops de items
+- ✅ Tutorial interactivo mejorado
+- ✅ Feedback visual con iconos en notificaciones
+- ✅ Sistema de evolución durante batalla
+- ✅ Teletransporte automático al perder
 
 ---
 
@@ -202,13 +219,20 @@ VOID (Vacío)
 3. 🔄 **Rota tu equipo** - Todos ganan experiencia
 4. 🏥 **Visita Centros Pokimon** - La curación es gratis
 5. 📜 **Completa misiones** - Grandes recompensas
+6. 🎯 **Usa efectos de estado** - Aumentan probabilidad de captura en 50%
+7. ⚡ **Gestiona tu energía** - Se regenera +5 por turno
 
 ### Estrategias Avanzadas
 1. 🧬 **Optimiza IVs** - Captura múltiples del mismo Pokimon
 2. ⚔️ **Conoce movesets** - Cada Pokimon aprende moves únicos
-3. 🌦️ **Usa el clima** - Algunos tipos se benefician del clima
-4. 🌙 **Caza nocturna** - Pokimon raros aparecen de noche
+3. 🌦️ **Usa el clima** - Algunos tipos se benefician del clima (+20% daño)
+4. 🌙 **Caza nocturna** - Pokimon raros aparecen de noche (+20% encuentros)
 5. 💎 **Farmea materiales** - Esencial para crafteo avanzado
+6. 🎯 **Debilita antes de capturar** - Menos HP = más probabilidad
+7. 🛡️ **Buffs máximos +6** - Planifica tus estrategias
+8. 💤 **Efectos de estado** - La IA también los sufre
+9. 🔄 **Drops de batalla** - 15% chance de obtener items
+10. ⚡ **Movimientos priority** - Atacan primero independiente de velocidad
 
 ### Secretos
 - 🌀 Los **portales** llevan a la siguiente zona en orden
@@ -271,12 +295,15 @@ VOID (Vacío)
 
 ### Efectos Implementados
 - 💫 **Partículas** al caminar
-- 🌧️ **Lluvia y tormentas** animadas
-- ⚡ **Relámpagos** en clima tormentoso
+- 🌧️ **Lluvia y tormentas** animadas (+15% encuentros)
+- ⚡ **Relámpagos** en clima tormentoso (+30% encuentros)
 - 💥 **Explosiones** al capturar/curar
 - ✨ **Brillos** en el jugador y Pokimon
 - 🌊 **Animaciones** de daño en batalla
 - 🎭 **Transiciones** suaves entre pantallas
+- 💬 **Notificaciones mejoradas** con iconos
+- 🎯 **Tutorial interactivo** al inicio
+- ⚠️ **Cooldown visual** entre encuentros
 
 ### Tema Cyberpunk
 - 🎨 Paleta de colores neón

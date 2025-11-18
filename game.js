@@ -9,6 +9,7 @@ class Game {
         this.battle = null;
         this.isPaused = false;
         this.keys = {};
+        this.encounterCooldown = 0; // Pasos desde último encuentro
 
         this.init();
     }
@@ -160,10 +161,62 @@ class Game {
         // Añadir misiones iniciales
         this.player.quests = [...QUESTS_DATA];
 
-        // Iniciar juego
+        // Items iniciales mejorados
+        this.player.inventory.addItem('POKIBALL', 5);
+        this.player.inventory.addItem('POTION', 5);
+        this.player.inventory.addItem('HERB', 5);
+
+        // Iniciar juego con tutorial
         setTimeout(() => {
-            this.startGame();
+            this.showTutorial();
         }, 500);
+    }
+
+    showTutorial() {
+        const tutorial = `
+            <div style="padding: 2rem; text-align: left; max-width: 600px;">
+                <h3 style="color: var(--primary); text-align: center;">🎮 Tutorial Rápido</h3>
+
+                <div style="margin: 1.5rem 0; line-height: 1.8;">
+                    <h4 style="color: var(--primary);">📍 Exploración:</h4>
+                    <p>• Usa las <strong>flechas ⬆️⬇️⬅️➡️</strong> o <strong>WASD</strong> para moverte</p>
+                    <p>• Camina por <strong>hierba alta 🌿</strong> para encuentros salvajes</p>
+                    <p>• Presiona <strong>ESPACIO</strong> para interactuar con edificios</p>
+
+                    <h4 style="color: var(--primary); margin-top: 1rem;">⚔️ Combate:</h4>
+                    <p>• Usa <strong>movimientos efectivos</strong> contra tipos débiles</p>
+                    <p>• La <strong>energía</strong> se regenera lentamente cada turno</p>
+                    <p>• <strong>Debilita</strong> al enemigo antes de capturar</p>
+                    <p>• Los <strong>efectos de estado</strong> ayudan en capturas</p>
+
+                    <h4 style="color: var(--primary); margin-top: 1rem;">🏥 Consejos:</h4>
+                    <p>• <strong>Centro Pokimon 🏥</strong> - Curación gratuita</p>
+                    <p>• <strong>Tienda 🏪</strong> - Compra Pokiballs y pociones</p>
+                    <p>• <strong>Portales 🌀</strong> - Viaja a nuevas zonas</p>
+                    <p>• <strong>Guarda frecuentemente</strong> con la tecla S</p>
+
+                    <h4 style="color: var(--primary); margin-top: 1rem;">🎯 Primeros Pasos:</h4>
+                    <p>1. Explora Neo Ciudad y encuentra el Centro Pokimon</p>
+                    <p>2. Captura tu primer Pokimon salvaje</p>
+                    <p>3. Completa misiones para obtener recompensas</p>
+                    <p>4. Sube de nivel y evoluciona tu equipo</p>
+                </div>
+
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button class="menu-btn" onclick="game.closeTutorial()">¡Entendido! Comenzar Aventura</button>
+                </div>
+            </div>
+        `;
+
+        UI.showModal('Tutorial', tutorial);
+    }
+
+    closeTutorial() {
+        UI.closeModal();
+        this.startGame();
+        setTimeout(() => {
+            UI.showNotification('💡 Dirígete al Centro Pokimon 🏥 o explora la hierba 🌿', 'info');
+        }, 1000);
     }
 
     startGame() {
@@ -270,9 +323,13 @@ class Game {
                 );
             }
 
-            // Verificar encuentros
-            if (this.world.hasEncounter(this.player.x, this.player.y)) {
+            // Incrementar cooldown
+            this.encounterCooldown++;
+
+            // Verificar encuentros (con cooldown mínimo)
+            if (this.encounterCooldown >= 5 && this.world.hasEncounter(this.player.x, this.player.y)) {
                 this.triggerWildEncounter();
+                this.encounterCooldown = 0; // Reset cooldown
             }
 
             // Actualizar tiempo
@@ -375,7 +432,7 @@ class Game {
 
         // Verificar que el jugador tenga Pokimon activos
         if (!this.player.hasAlivePokimon()) {
-            UI.showNotification('No tienes Pokimon para combatir.', 'warning');
+            UI.showNotification('No tienes Pokimon para combatir. Visita un Centro Pokimon.', 'warning');
             return;
         }
 
@@ -383,6 +440,7 @@ class Game {
 
         // Iniciar batalla
         this.battle = new Battle(playerPokimon, wildPokimon, true);
+        window.battle = this.battle; // Exponer globalmente para botones HTML
         this.switchScreen('battle');
         this.battle.start();
     }

@@ -13,23 +13,41 @@ const UI = {
         document.getElementById('modal').classList.add('hidden');
     },
 
-    showNotification(message, type = 'info') {
+    showNotification(message, type = 'info', duration = 3000) {
         const notification = document.getElementById('notification');
         notification.textContent = message;
         notification.classList.remove('hidden');
 
         const colors = {
-            success: 'var(--success)',
-            error: 'var(--danger)',
-            warning: 'var(--warning)',
-            info: 'var(--primary)'
+            success: '#00ff88',
+            error: '#ff0055',
+            warning: '#ffaa00',
+            info: '#00ffff'
+        };
+
+        const textColors = {
+            success: '#000',
+            error: '#fff',
+            warning: '#000',
+            info: '#000'
         };
 
         notification.style.backgroundColor = colors[type] || colors.info;
+        notification.style.color = textColors[type] || textColors.info;
+
+        // Añadir icono
+        const icons = {
+            success: '✅',
+            error: '❌',
+            warning: '⚠️',
+            info: '💡'
+        };
+
+        notification.textContent = `${icons[type] || icons.info} ${message}`;
 
         setTimeout(() => {
             notification.classList.add('hidden');
-        }, 3000);
+        }, duration);
     },
 
     updateHUD(player, world) {
